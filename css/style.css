@@ -1,0 +1,269 @@
+/* Reset + base layout */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #f0f4f8, #d9e4ec);
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #333;
+}
+
+/* Pastel background */
+body.register-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #fce1ec, #e1f7fc, #e9fce1);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Container card */
+.register-card {
+  background: #ffffffcc; /* translucent white card */
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+/* Title */
+.register-card h2 {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  color: #2e7d32;
+}
+
+/* Input fields */
+.register-card input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
+
+.register-card input:focus {
+  border-color: #a3d2ca;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(163,210,202,0.3);
+}
+
+/* Button */
+.register-card button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #f48fb1;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.register-card button:hover {
+  background: #ec407a;
+}
+
+/* Emoji accents */
+.register-card h2::before {
+  content: "📝 ";
+}
+.register-card h2::after {
+  content: " 🛒";
+}
+
+/* Success/Error messages */
+#message {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #388e3c;
+}
+
+/* Hero section (header area) */
+/* Hero section */
+.hero {
+  text-align: center;
+}
+
+/* Main heading */
+.hero h1 {
+  font-size: 2.2rem;
+  color: #2e7d32;
+  margin-bottom: 0.5rem;
+}
+
+/* Slogan with animation */
+.hero p {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 1.5rem;
+  opacity: 0;                    /* hidden at start */
+  transform: translateY(20px);   /* slightly pushed down */
+  animation: fadeSlideUp 2s ease forwards;
+  animation-delay: 0.5s;         /* start half a sec later */
+}
+
+/* Keyframes */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Navigation links under header */
+nav {
+  margin-top: 20px;
+}
+nav a {
+  margin: 0 12px;
+  text-decoration: none;
+  font-weight: bold;
+  color: #4CAF50;
+  font-size: 1rem;
+}
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* Falling emojis */
+.fall {
+  position: fixed;
+  top: -50px;
+  font-size: 2rem;
+  animation: fall 4s linear forwards;
+  pointer-events: none;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Register card entrance animation */
+.register-card {
+  opacity: 0;
+  transform: translateY(40px);
+  animation: slideUpFade 1s ease forwards;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Falling sparkles */
+.sparkle {
+  position: fixed;
+  top: -30px;
+  font-size: 1.5rem;
+  animation: fallSparkle 3s linear forwards;
+  pointer-events: none;
+}
+
+@keyframes fallSparkle {
+  to {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Login page */
+body.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #e1f7fc, #fce1ec, #fff3e6);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Login card */
+.login-card {
+  background: #ffffffcc;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+/* Title */
+.login-card h2 {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  color: #1565c0;
+}
+.login-card h2::before { content: "🔑 "; }
+.login-card h2::after { content: " 🔐"; }
+
+/* Inputs */
+.login-card input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
+.login-card input:focus {
+  border-color: #90caf9;
+  box-shadow: 0 0 0 3px rgba(144,202,249,0.3);
+  outline: none;
+}
+
+/* Button */
+.login-card button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #42a5f5;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background .3s;
+}
+.login-card button:hover { background: #1e88e5; }
+
+/* Clapping emojis animation */
+.clap {
+  position: fixed;
+  top: -30px;
+  font-size: 2rem;
+  animation: fallClap 3s linear forwards;
+  pointer-events: none;
+}
+
+@keyframes fallClap {
+  to {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
