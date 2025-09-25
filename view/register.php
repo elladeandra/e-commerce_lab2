@@ -8,6 +8,7 @@
 </head>
 <body class="register-page">
   <div class="register-card">
+    <p style="text-align:left;margin-bottom:8px;"><a class="btn" href="../index.php">← Back to Home</a></p>
     <h2>Customer Registration</h2>
     <form id="registerForm">
       <input type="text" name="fullname" placeholder="Full Name" required>
@@ -19,6 +20,7 @@
       <button type="submit" id="registerBtn">Register</button>
     </form>
     <p id="message"></p>
+    <p class="auth-switch">Already have an account? <a href="login.php">Log in</a></p>
   </div>
 
   <script>

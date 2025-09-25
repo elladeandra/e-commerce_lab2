@@ -8,6 +8,7 @@
 </head>
 <body class="login-page">
   <div class="login-card">
+    <p style="text-align:left;margin-bottom:8px;"><a class="btn" href="../index.php">← Back to Home</a></p>
     <h2>Login</h2>
     <form id="loginForm">
       <input type="email" name="email" placeholder="Email" required>
