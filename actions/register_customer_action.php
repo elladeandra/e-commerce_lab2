@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $country = $_POST['country'] ?? '';
     $city = $_POST['city'] ?? '';
     $contact = $_POST['contact'] ?? '';
-    $role = 2; // force Customer role (role 2)
+    $role = 2; // force all new registrations to be customers
 
     // Validate all fields are filled (basic check)
     if (empty($name) || empty($email) || empty($password) || empty($country) || empty($city) || empty($contact)) {
