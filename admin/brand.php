@@ -45,6 +45,11 @@ if (!isAdmin()) {
                         <i class="fas fa-plus"></i> Add Brand
                     </button>
                 </form>
+                <div style="margin-top: 20px;">
+                    <a href="../index.php" class="btn">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a>
+                </div>
             </section>
 
             <!-- Brands List -->
