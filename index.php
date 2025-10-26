@@ -18,6 +18,8 @@ session_start();
           <span class="greeting">Hello, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</span>
           <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == '1'): ?>
             <a class="btn" href="admin/category.php">Category</a>
+            <a class="btn" href="admin/brand.php">Brand</a>
+            <a class="btn" href="admin/product.php">Add Product</a>
           <?php endif; ?>
           <a class="btn btn-logout" href="view/logout.php">Logout</a>
         <?php else: ?>
