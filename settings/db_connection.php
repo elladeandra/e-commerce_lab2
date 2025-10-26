@@ -1,10 +1,12 @@
 <?php
+require_once 'db_cred.php';
+
 class DB_Connection {
     protected function connect() {
         try {
-            $dsn = "mysql:host=localhost;dbname=ecommerce_2025A_emmanuella_oteng;charset=utf8mb4";
-            $username = "emmanuella.oteng";
-            $password = "NeverForget20";
+            $dsn = "mysql:host=" . SERVER . ";dbname=" . DATABASE . ";charset=utf8mb4";
+            $username = USERNAME;
+            $password = PASSWD;
 
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
