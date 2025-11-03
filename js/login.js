@@ -5,8 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
   
-      const email = form.email.value.trim();
-      const password = form.password.value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
   
       // ✅ Client-side validation
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,14 +19,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
   
-      try {
+            try {
+        console.log("Attempting login with:", email);
         const response = await fetch("../actions/login_customer_action.php", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({ email, password }),
         });
-  
+
         const result = await response.text();
+        console.log("Login response:", result);
   
         if (result.trim() === "success") {
           messageBox.style.color = "green";

@@ -10,9 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($result) {
         // ✅ Set session variables
-        $_SESSION['user_id'] = $result['customer_id'];
-        $_SESSION['user_name'] = $result['customer_name'];
-        $_SESSION['user_role'] = $result['user_role'];
+        $_SESSION['user_id'] = $result['customer_id'] ?? $result['user_id'] ?? null;
+        $_SESSION['user_name'] = $result['customer_name'] ?? $result['user_name'] ?? null;
+        $_SESSION['user_role'] = $result['user_role'] ?? 0;
 
         echo "success";
     } else {
