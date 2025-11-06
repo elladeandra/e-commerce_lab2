@@ -4,8 +4,8 @@
 // This file is configured for local XAMPP development
 
 define("SERVER", "localhost");
-define("USERNAME", "root");
-define("PASSWD", "");
+define("USERNAME", "emmanuella.oteng");
+define("PASSWD", "NeverForget20");
 define("DATABASE", "ecommerce_2025A_emmanuella_oteng");
 ?>
 
