@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="product-card">
                 ${product.product_image ? `
                     <div class="product-image">
-                        <img src="/mvc_skeleton_template/${product.product_image}" alt="${escapeHtml(product.product_title)}">
+                        <img src="/~emmanuella.oteng/${product.product_image}" alt="${escapeHtml(product.product_title)}">
                     </div>
                 ` : `
                     <div class="product-image">
