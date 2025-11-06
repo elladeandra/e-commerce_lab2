@@ -124,5 +124,106 @@ class Product extends db_connection {
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
+
+    // View all products (customer-facing method)
+    public function view_all_products() {
+        $sql = "SELECT p.*, c.cat_name, b.brand_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.product_cat = c.cat_id 
+                LEFT JOIN brands b ON p.product_brand = b.brand_id 
+                ORDER BY p.product_id DESC";
+        $stmt = $this->connect()->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    // Search products by title/name
+    public function search_products($query) {
+        $search_term = '%' . $query . '%';
+        $sql = "SELECT p.*, c.cat_name, b.brand_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.product_cat = c.cat_id 
+                LEFT JOIN brands b ON p.product_brand = b.brand_id 
+                WHERE p.product_title LIKE ? OR p.product_desc LIKE ? OR p.product_keywords LIKE ?
+                ORDER BY p.product_id DESC";
+        $stmt = $this->connect()->prepare($sql);
+        $stmt->execute([$search_term, $search_term, $search_term]);
+        return $stmt->fetchAll();
+    }
+
+    // Filter products by category
+    public function filter_products_by_category($cat_id) {
+        $sql = "SELECT p.*, c.cat_name, b.brand_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.product_cat = c.cat_id 
+                LEFT JOIN brands b ON p.product_brand = b.brand_id 
+                WHERE p.product_cat = ? 
+                ORDER BY p.product_id DESC";
+        $stmt = $this->connect()->prepare($sql);
+        $stmt->execute([$cat_id]);
+        return $stmt->fetchAll();
+    }
+
+    // Filter products by brand
+    public function filter_products_by_brand($brand_id) {
+        $sql = "SELECT p.*, c.cat_name, b.brand_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.product_cat = c.cat_id 
+                LEFT JOIN brands b ON p.product_brand = b.brand_id 
+                WHERE p.product_brand = ? 
+                ORDER BY p.product_id DESC";
+        $stmt = $this->connect()->prepare($sql);
+        $stmt->execute([$brand_id]);
+        return $stmt->fetchAll();
+    }
+
+    // View single product
+    public function view_single_product($id) {
+        $sql = "SELECT p.*, c.cat_name, b.brand_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.product_cat = c.cat_id 
+                LEFT JOIN brands b ON p.product_brand = b.brand_id 
+                WHERE p.product_id = ?";
+        $stmt = $this->connect()->prepare($sql);
+        $stmt->execute([$id]);
+        return $stmt->fetch();
+    }
+
+    // Advanced search with filters
+    public function search_products_with_filters($query = '', $cat_id = null, $brand_id = null) {
+        $conditions = [];
+        $params = [];
+        
+        if (!empty($query)) {
+            $search_term = '%' . $query . '%';
+            $conditions[] = "(p.product_title LIKE ? OR p.product_desc LIKE ? OR p.product_keywords LIKE ?)";
+            $params[] = $search_term;
+            $params[] = $search_term;
+            $params[] = $search_term;
+        }
+        
+        if ($cat_id !== null && $cat_id !== '') {
+            $conditions[] = "p.product_cat = ?";
+            $params[] = $cat_id;
+        }
+        
+        if ($brand_id !== null && $brand_id !== '') {
+            $conditions[] = "p.product_brand = ?";
+            $params[] = $brand_id;
+        }
+        
+        $where_clause = !empty($conditions) ? "WHERE " . implode(' AND ', $conditions) : '';
+        
+        $sql = "SELECT p.*, c.cat_name, b.brand_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.product_cat = c.cat_id 
+                LEFT JOIN brands b ON p.product_brand = b.brand_id 
+                $where_clause
+                ORDER BY p.product_id DESC";
+        
+        $stmt = $this->connect()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
 }
 ?>

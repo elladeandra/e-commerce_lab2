@@ -63,4 +63,40 @@ function search_products_by_keywords_ctr($keywords) {
     $product = new Product();
     return $product->search_products_by_keywords($keywords);
 }
+
+// View all products controller
+function view_all_products_ctr() {
+    $product = new Product();
+    return $product->view_all_products();
+}
+
+// Search products controller
+function search_products_ctr($query) {
+    $product = new Product();
+    return $product->search_products($query);
+}
+
+// Filter products by category controller
+function filter_products_by_category_ctr($cat_id) {
+    $product = new Product();
+    return $product->filter_products_by_category($cat_id);
+}
+
+// Filter products by brand controller
+function filter_products_by_brand_ctr($brand_id) {
+    $product = new Product();
+    return $product->filter_products_by_brand($brand_id);
+}
+
+// View single product controller
+function view_single_product_ctr($id) {
+    $product = new Product();
+    return $product->view_single_product($id);
+}
+
+// Search products with filters controller
+function search_products_with_filters_ctr($query = '', $cat_id = null, $brand_id = null) {
+    $product = new Product();
+    return $product->search_products_with_filters($query, $cat_id, $brand_id);
+}
 ?>
