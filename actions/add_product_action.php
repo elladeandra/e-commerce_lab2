@@ -36,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tmp_name = $_FILES['product_image']['tmp_name'];
         $filename = time().'_'.basename($_FILES['product_image']['name']);
         $target_path = $upload_dir.$filename;
-        var_dump($upload_dir, is_dir($upload_dir), is_writable($upload_dir), $_FILES['product_image']['error']);
 
         if (move_uploaded_file($tmp_name, $target_path)) {
             $product_image = 'uploads/products/'.$filename; // relative path for DB
