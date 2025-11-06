@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__).'/../classes/customer_class.php';
+require_once '../classes/customer_class.php';
 
 function register_customer_ctr($fullname, $email, $password, $country, $city, $contact, $role = 2) {
     $customer = new Customer();

@@ -9,24 +9,24 @@ class Customer extends db_connection {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         $sql = "INSERT INTO users 
-                (user_name, user_email, user_password, user_role) 
-                VALUES (?, ?, ?, ?)";
+                (customer_name, customer_email, customer_pass, customer_country, customer_city, customer_contact, user_role) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->connect()->prepare($sql);
-        return $stmt->execute([$fullname, $email, $hashedPassword, $role]);
+        return $stmt->execute([$fullname, $email, $hashedPassword, $country, $city, $contact, $role]);
     }
 
     // ✅ Fetch a customer by email (for login)
     public function get_customer_by_email($email) {
-        $sql = "SELECT user_id, user_name, user_email, user_password as customer_pass, user_role FROM users WHERE user_email = ?";
+        $sql = "SELECT customer_id, customer_name, customer_email, customer_pass, user_role FROM customer WHERE customer_email = ?";
         $stmt = $this->connect()->prepare($sql);
         $stmt->execute([$email]);
         $result = $stmt->fetch();
         // Map database columns to expected column names
         if ($result) {
             return [
-                'customer_id' => $result['user_id'],
-                'customer_name' => $result['user_name'],
-                'customer_email' => $result['user_email'],
+                'customer_id' => $result['customer_id'],
+                'customer_name' => $result['customer_name'],
+                'customer_email' => $result['customer_email'],
                 'customer_pass' => $result['customer_pass'],
                 'user_role' => $result['user_role']
             ];

@@ -104,11 +104,11 @@ if (!isAdmin()) {
                             <small>Upload a single image for this product (optional)</small>
                         </div>
                         
-                        <div class="form-group">
+                        <!-- <div class="form-group">
                             <label for="bulk_images">Bulk Image Upload:</label>
                             <input type="file" id="bulk_images" name="bulk_images[]" accept="image/*" multiple>
                             <small>Select multiple images to upload at once (optional)</small>
-                        </div>
+                        </div> -->
                     </div>
                     
                     <div class="form-actions">
@@ -202,11 +202,11 @@ if (!isAdmin()) {
                         <small>Upload a new image (optional - leave empty to keep current image)</small>
                     </div>
                     
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <label for="edit_bulk_images">Bulk Image Upload:</label>
                         <input type="file" id="edit_bulk_images" name="bulk_images[]" accept="image/*" multiple>
                         <small>Select multiple images to upload at once (optional)</small>
-                    </div>
+                    </div> -->
                 </div>
                 
                 <div class="form-actions">

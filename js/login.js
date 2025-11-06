@@ -27,10 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
           body: new URLSearchParams({ email, password }),
         });
 
-        const result = await response.text();
-        console.log("Login response:", result);
-  
-        if (result.trim() === "success") {
+        const result = await response.json();
+        console.log(result.status)
+        if (result.status === "success") {
           messageBox.style.color = "green";
           messageBox.textContent = "Login successful! Redirecting...";
           setTimeout(() => {
@@ -38,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }, 2000);
         } else {
           messageBox.style.color = "red";
-          messageBox.textContent = result;
+          messageBox.textContent = result.status;
         }
       } catch (error) {
         console.error(error);
