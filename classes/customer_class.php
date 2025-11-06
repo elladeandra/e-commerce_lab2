@@ -8,7 +8,7 @@ class Customer extends db_connection {
         // Always hash the password before saving
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        $sql = "INSERT INTO users 
+        $sql = "INSERT INTO customer 
                 (customer_name, customer_email, customer_pass, customer_country, customer_city, customer_contact, user_role) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->connect()->prepare($sql);
