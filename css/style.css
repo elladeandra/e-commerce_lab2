@@ -479,6 +479,18 @@ body.home-page {
   align-items: center;
 }
 
+.menu .btn[href$="all_product.php"] {
+  order: 5;
+}
+
+.menu .btn[href$="login.php"] {
+  order: 9;
+}
+
+.menu .btn-logout {
+  order: 10;
+}
+
 .nav-link {
   text-decoration: none;
   color: rgba(255, 255, 255, 0.95);
