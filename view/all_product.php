@@ -12,12 +12,16 @@ require_once dirname(__FILE__).'/../actions/product_actions.php';
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../fontawesome/css/all.min.css">
     <script src="../js/product_search.js" defer></script>
+    <script src="../js/cart.js" defer></script>
 </head>
 <body class="product-page">
     <header class="site-header">
         <div class="container">
             <a class="brand" href="../index.php"><i class="fas fa-store"></i> E‑Commerce</a>
             <nav class="menu">
+                <a class="btn" href="../index.php"><i class="fas fa-home"></i> Home</a>
+                <a class="btn" href="cart.php"><i class="fas fa-shopping-cart"></i> Cart</a>
+                <a class="btn" href="checkout.php"><i class="fas fa-lock"></i> Checkout</a>
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <span class="greeting">Hello, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</span>
                     <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == '1'): ?>
@@ -190,15 +194,6 @@ require_once dirname(__FILE__).'/../actions/product_actions.php';
     </footer>
 
     <script>
-        // Add to cart functionality (placeholder)
-        document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const productId = this.getAttribute('data-product-id');
-                alert('Add to Cart functionality will be implemented soon! Product ID: ' + productId);
-            });
-        });
-
         // Back to top functionality
         function scrollToTop() {
             window.scrollTo({

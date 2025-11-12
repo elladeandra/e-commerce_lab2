@@ -1,0 +1,64 @@
+<?php
+session_start();
+header('Content-Type: application/json');
+
+require_once dirname(__FILE__) . '/../controllers/cart_controller.php';
+require_once dirname(__FILE__) . '/../controllers/product_controller.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Invalid request method',
+    ]);
+    exit;
+}
+
+$product_id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+$qty = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 1;
+
+if ($product_id <= 0) {
+    http_response_code(400);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Invalid product selected.',
+    ]);
+    exit;
+}
+
+$product = get_product_ctr($product_id);
+
+if (!$product) {
+    http_response_code(404);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Product not found.',
+    ]);
+    exit;
+}
+
+[$customer_id, $ip_address] = cart_context();
+
+try {
+    $operation = add_to_cart_ctr($product_id, $qty, $customer_id, $ip_address);
+    $summary = get_user_cart_summary_ctr($customer_id, $ip_address);
+
+    echo json_encode([
+        'status' => 'success',
+        'message' => $operation['status'] === 'updated'
+            ? 'Cart quantity updated successfully.'
+            : 'Product added to cart.',
+        'data' => [
+            'operation' => $operation,
+            'cart' => $summary,
+        ],
+    ]);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Unable to add product to cart. Please try again.',
+        'error' => $e->getMessage(),
+    ]);
+}
+

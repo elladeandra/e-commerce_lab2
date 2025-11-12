@@ -26,12 +26,17 @@ if (!$product) {
     <title><?php echo htmlspecialchars($product['product_title']); ?> - E-Commerce Platform</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../fontawesome/css/all.min.css">
+    <script src="../js/cart.js" defer></script>
 </head>
 <body class="product-page">
     <header class="site-header">
         <div class="container">
             <a class="brand" href="../index.php"><i class="fas fa-store"></i> E‑Commerce</a>
             <nav class="menu">
+                <a class="btn" href="../index.php"><i class="fas fa-home"></i> Home</a>
+                <a class="btn" href="all_product.php"><i class="fas fa-box"></i> Products</a>
+                <a class="btn" href="cart.php"><i class="fas fa-shopping-cart"></i> Cart</a>
+                <a class="btn" href="checkout.php"><i class="fas fa-lock"></i> Checkout</a>
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <span class="greeting">Hello, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</span>
                     <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == '1'): ?>
@@ -143,13 +148,6 @@ if (!$product) {
         </div>
     </footer>
 
-    <script>
-        // Add to cart functionality (placeholder)
-        document.querySelector('.add-to-cart-btn').addEventListener('click', function() {
-            const productId = this.getAttribute('data-product-id');
-            alert('Add to Cart functionality will be implemented soon! Product ID: ' + productId);
-        });
-    </script>
 </body>
 </html>
 

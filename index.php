@@ -9,6 +9,7 @@ session_start();
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="fontawesome/css/all.min.css">
   <script src="js/product_search.js" defer></script>
+  <script src="js/cart.js" defer></script>
 </head>
 <body class="home-page">
   <header class="site-header">
@@ -30,6 +31,8 @@ session_start();
           <a class="btn btn-primary" href="view/login.php">Login</a>
         <?php endif; ?>
         <a class="btn" href="view/all_product.php"><i class="fas fa-box"></i> All Products</a>
+        <a class="btn" href="view/cart.php"><i class="fas fa-shopping-cart"></i> Cart</a>
+        <a class="btn" href="view/checkout.php"><i class="fas fa-lock"></i> Checkout</a>
       </nav>
     </div>
   </header>
@@ -93,7 +96,7 @@ session_start();
     <div class="container hero-grid">
       <div class="hero-copy">
         <h1>Your one‑stop marketplace</h1>
-        <p>Discover products you love from trusted sellers, with fast checkout and secure payments.</p>
+        <p>Discover products you love from Lumé, with fast checkout and secure payments.</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="view/register.php"><i class="fas fa-user-plus"></i> Get Started</a>
           <a class="btn" href="view/login.php"><i class="fas fa-right-to-bracket"></i> Sign In</a>
@@ -144,7 +147,7 @@ session_start();
 
   <footer class="site-footer">
     <div class="container">
-      <small>© <?php echo date('Y'); ?> E‑Commerce Platform. All rights reserved.</small>
+      <small>© <?php echo date('Y'); ?> EēCommerce Platform. All rights reserved.</small>
     </div>
   </footer>
 </body>
