@@ -189,21 +189,31 @@ error_log("Reference from URL: $reference");
                 } else {
                     // Payment verification failed
                     const errorMsg = data.message || 'Payment verification failed';
-                    showError(errorMsg);
+                    console.error('Verification failed:', data);
+                    showError(errorMsg + (data.verified === false ? ' (Not verified)' : ''));
                     
-                    // Redirect after 5 seconds
+                    // Log full error details for debugging
+                    console.error('Full error response:', JSON.stringify(data, null, 2));
+                    
+                    // Redirect after 5 seconds with error details
                     setTimeout(() => {
-                        window.location.href = 'checkout.php?error=verification_failed';
+                        const errorParam = encodeURIComponent(errorMsg);
+                        window.location.href = 'checkout.php?error=verification_failed&msg=' + errorParam;
                     }, 5000);
                 }
                 
             } catch (error) {
                 console.error('Verification error:', error);
-                showError('Connection error. Please try again or contact support.');
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    reference: reference
+                });
+                showError('Connection error. Please try again or contact support. Error: ' + error.message);
                 
                 // Redirect after 5 seconds
                 setTimeout(() => {
-                    window.location.href = 'checkout.php?error=connection_error';
+                    window.location.href = 'checkout.php?error=connection_error&details=' + encodeURIComponent(error.message);
                 }, 5000);
             }
         }

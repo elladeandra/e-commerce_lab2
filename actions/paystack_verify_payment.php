@@ -21,12 +21,24 @@ require_once dirname(__FILE__) . '/../controllers/cart_controller.php';
 require_once dirname(__FILE__) . '/../controllers/order_controller.php';
 
 error_log("=== PAYSTACK VERIFY PAYMENT ===");
+error_log("Server: " . ($_SERVER['HTTP_HOST'] ?? 'unknown'));
+error_log("Request URI: " . ($_SERVER['REQUEST_URI'] ?? 'unknown'));
+error_log("Session ID: " . session_id());
+error_log("User logged in: " . (isLoggedIn() ? 'YES' : 'NO'));
+error_log("User ID: " . (getLoggedInUserId() ?? 'NULL'));
 
 // Check if user is logged in
 if (!isLoggedIn()) {
+    error_log("ERROR: User not logged in during payment verification");
     echo json_encode([
         'status' => 'error',
-        'message' => 'Session expired. Please login again.'
+        'message' => 'Session expired. Please login again.',
+        'session_id' => session_id(),
+        'debug' => [
+            'session_status' => session_status(),
+            'has_user_id' => isset($_SESSION['user_id']),
+            'session_data' => array_keys($_SESSION ?? [])
+        ]
     ]);
     exit();
 }
@@ -53,10 +65,12 @@ try {
     // ============================================================
     
     // Verify transaction with Paystack
+    error_log("Calling Paystack API to verify reference: $reference");
     $verification_response = paystack_verify_transaction($reference);
     
     if (!$verification_response) {
-        throw new Exception("No response from Paystack verification API");
+        error_log("ERROR: No response from Paystack API");
+        throw new Exception("No response from Paystack verification API. Please check your internet connection and try again.");
     }
     
     error_log("Paystack verification response: " . json_encode($verification_response));
@@ -64,12 +78,15 @@ try {
     // Check if verification was successful
     if (!isset($verification_response['status']) || $verification_response['status'] !== true) {
         $error_msg = $verification_response['message'] ?? 'Payment verification failed';
-        error_log("Payment verification failed: $error_msg");
+        $error_code = $verification_response['data']['gateway_response'] ?? 'Unknown error';
+        error_log("Payment verification failed: $error_msg (Code: $error_code)");
+        error_log("Full Paystack response: " . json_encode($verification_response));
         
         echo json_encode([
             'status' => 'error',
-            'message' => $error_msg,
-            'verified' => false
+            'message' => $error_msg . ($error_code !== 'Unknown error' ? ' (' . $error_code . ')' : ''),
+            'verified' => false,
+            'paystack_response' => $verification_response
         ]);
         exit();
     }

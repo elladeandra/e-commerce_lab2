@@ -16,8 +16,41 @@ define('PAYSTACK_VERIFY_ENDPOINT', PAYSTACK_API_URL . '/transaction/verify/');
 
 // Application Configuration
 define('APP_ENVIRONMENT', 'test'); 
-define('APP_BASE_URL', 'http://localhost/~emmanuella.oteng'); 
+
+// Dynamically detect base URL from current request
+// This works for both localhost and live server
+function get_base_url() {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || 
+                 (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) 
+                ? 'https://' : 'http://';
+    
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    
+    // Get the script directory (e.g., /~emmanuella.oteng or /)
+    $script_dir = dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+    
+    // Normalize the path
+    $script_dir = str_replace('\\', '/', $script_dir);
+    $script_dir = rtrim($script_dir, '/');
+    
+    // If script_dir is just '/', make it empty
+    if ($script_dir === '/' || $script_dir === '\\') {
+        $script_dir = '';
+    }
+    
+    $base_url = $protocol . $host . $script_dir;
+    
+    // Log for debugging (remove in production if needed)
+    error_log("Detected APP_BASE_URL: $base_url");
+    
+    return $base_url;
+}
+
+define('APP_BASE_URL', get_base_url()); 
 define('PAYSTACK_CALLBACK_URL', APP_BASE_URL . '/view/paystack_callback.php'); // Callback after payment
+
+// Log callback URL for debugging
+error_log("Paystack Callback URL: " . PAYSTACK_CALLBACK_URL);
 
 /**
  * Initialize a Paystack transaction

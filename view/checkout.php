@@ -154,6 +154,29 @@ $brands = get_brands_ctr();
 
             <div id="checkoutFeedback" class="feedback-banner" role="alert" hidden></div>
 
+            <?php 
+            // Display error messages from URL parameters
+            if (isset($_GET['error'])): 
+                $error_type = $_GET['error'] ?? '';
+                $error_msg = $_GET['msg'] ?? '';
+                $error_details = $_GET['details'] ?? '';
+                
+                $error_messages = [
+                    'verification_failed' => $error_msg ?: 'Payment verification failed. Please contact support if payment was deducted.',
+                    'connection_error' => $error_details ?: 'Connection error occurred. Please try again.',
+                    'cancelled' => 'Payment was cancelled. You can try again when ready.'
+                ];
+                
+                $display_message = $error_messages[$error_type] ?? 'An error occurred during payment processing.';
+            ?>
+                <div class="feedback-banner" role="alert" style="background: #fee2e2; border: 2px solid #fecaca; color: #dc2626; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Payment Error:</strong> <?php echo htmlspecialchars($display_message); ?>
+                    <?php if ($error_type === 'verification_failed'): ?>
+                        <br><small style="margin-top: 0.5rem; display: block;">If payment was deducted, please contact support with your payment reference.</small>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
             <?php if ($requires_login): ?>
                 <div class="checkout-login-prompt">
                     <div class="checkout-lock-icon">
