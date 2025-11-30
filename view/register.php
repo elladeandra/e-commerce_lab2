@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <script src="../js/register.js" defer></script>
 </head>
@@ -23,20 +24,5 @@
     <p class="auth-switch">Already have an account? <a href="login.php">Log in</a></p>
   </div>
 
-  <script>
-    // Drop sparkles after page load
-    window.addEventListener("load", () => {
-      for (let i = 0; i < 15; i++) {
-        let sparkle = document.createElement("div");
-        sparkle.classList.add("sparkle");
-        sparkle.textContent = "✨";
-        sparkle.style.left = Math.random() * 100 + "vw";
-        sparkle.style.animationDuration = (2 + Math.random() * 2) + "s";
-        document.body.appendChild(sparkle);
-
-        setTimeout(() => sparkle.remove(), 4000);
-      }
-    });
-  </script>
 </body>
 </html>

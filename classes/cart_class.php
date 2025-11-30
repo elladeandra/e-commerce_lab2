@@ -116,7 +116,8 @@ class Cart extends DB_Connection
 
         $params = array_merge([$product_id], $contextParams);
 
-        $sql = "DELETE FROM cart c WHERE c.p_id = ? AND $context_clause";
+        // Correct MySQL/MariaDB syntax: DELETE alias FROM table alias WHERE ...
+        $sql = "DELETE c FROM cart c WHERE c.p_id = ? AND $context_clause";
         $stmt = $this->connect()->prepare($sql);
         $stmt->execute($params);
 
@@ -130,7 +131,8 @@ class Cart extends DB_Connection
         $contextParams = [];
         $context_clause = $this->buildContextClause($customer_id, $ip_address, $contextParams, 'c');
 
-        $sql = "DELETE FROM cart c WHERE $context_clause";
+        // Correct MySQL/MariaDB syntax: DELETE alias FROM table alias WHERE ...
+        $sql = "DELETE c FROM cart c WHERE $context_clause";
         $stmt = $this->connect()->prepare($sql);
         $stmt->execute($contextParams);
 

@@ -2,46 +2,146 @@
 session_start();
 
 require_once dirname(__FILE__) . '/../controllers/cart_controller.php';
+require_once dirname(__FILE__) . '/../controllers/category_controller.php';
+require_once dirname(__FILE__) . '/../controllers/brand_controller.php';
 
-[$customer_id, $ip_address] = cart_context();
-$cart_summary = get_user_cart_summary_ctr($customer_id, $ip_address);
-$cart_items = $cart_summary['items'];
-$totals = $cart_summary['totals'];
-$requires_login = empty($customer_id);
+// ALWAYS use session-based cart for consistency (same as cart.php)
+// Initialize session cart if it doesn't exist
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+// If session cart is empty, try to load from database and convert to session
+if (empty($_SESSION['cart'])) {
+    [$customer_id, $ip_address] = cart_context();
+    $cart_summary = get_user_cart_summary_ctr($customer_id, $ip_address);
+    $db_cart_items = $cart_summary['items'];
+    
+    // Convert database cart items to session format
+    if (!empty($db_cart_items)) {
+        foreach ($db_cart_items as $item) {
+            $size = $item['size'] ?? 'M'; // Default size if not set
+            $cartKey = 'product_' . $item['product_id'] . '_' . $size;
+            
+            // Only add if not already in session
+            if (!isset($_SESSION['cart'][$cartKey])) {
+                $_SESSION['cart'][$cartKey] = [
+                    'cart_key' => $cartKey,
+                    'product_id' => $item['product_id'],
+                    'product_name' => $item['product_title'],
+                    'product_price' => floatval($item['product_price']),
+                    'product_image' => $item['product_image'] ?? '',
+                    'product_category' => $item['cat_name'] ?? 'Product',
+                    'product_keywords' => $item['product_keywords'] ?? '',
+                    'size' => $size,
+                    'quantity' => intval($item['qty'])
+                ];
+            }
+        }
+    }
+}
+
+// Build cart items array from session
+$cart_items = [];
+$subtotal = 0;
+$totalItems = 0;
+
+foreach ($_SESSION['cart'] as $cartKey => $item) {
+    $cart_items[] = [
+        'cart_key' => $cartKey,
+        'product_id' => $item['product_id'],
+        'product_title' => $item['product_name'],
+        'product_price' => $item['product_price'],
+        'product_image' => $item['product_image'],
+        'cat_name' => $item['product_category'],
+        'product_keywords' => $item['product_keywords'] ?? '',
+        'size' => $item['size'],
+        'qty' => $item['quantity']
+    ];
+    $subtotal += $item['product_price'] * $item['quantity'];
+    $totalItems += $item['quantity'];
+}
+
+$totals = [
+    'count' => $totalItems,
+    'subtotal' => $subtotal
+];
+
+$requires_login = empty($_SESSION['user_id']);
+
+// Get categories and brands for header
+$categories = get_categories_ctr();
+$brands = get_brands_ctr();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout - E-Commerce Platform</title>
+    <title>Checkout - Lumé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../fontawesome/css/all.min.css">
     <script src="../js/cart.js" defer></script>
     <script src="../js/checkout.js" defer></script>
 </head>
 <body class="checkout-page">
+    <!-- HEADER - THREE SECTIONS STACKED VERTICALLY -->
     <header class="site-header">
-        <div class="container">
-            <a class="brand" href="../index.php"><i class="fas fa-store"></i> E‑Commerce</a>
-            <nav class="menu">
-                <a class="btn" href="../index.php"><i class="fas fa-home"></i> Home</a>
-                <a class="btn" href="all_product.php"><i class="fas fa-box"></i> Products</a>
-                <a class="btn" href="cart.php"><i class="fas fa-shopping-cart"></i> Cart</a>
-                <a class="btn btn-primary active" href="checkout.php"><i class="fas fa-lock"></i> Checkout</a>
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <span class="greeting">Hello, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</span>
-                    <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == '1'): ?>
-                        <a class="btn" href="../admin/category.php">Category</a>
-                        <a class="btn" href="../admin/brand.php">Brand</a>
-                        <a class="btn" href="../admin/product.php">Add Product</a>
+        
+        <!-- SECTION 1: MAIN HEADER -->
+        <div class="main-header">
+            <div class="header-content">
+                <a href="../index.php" class="brand">LUMÉ</a>
+                
+                <div class="header-search">
+                    <form method="GET" action="product_search_result.php" style="width: 100%;">
+                        <input type="text" 
+                               name="search" 
+                               class="search-input-header" 
+                               placeholder="Search products by title, description, or keywords..."
+                               value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                        <span class="search-icon">🔍</span>
+                    </form>
+                </div>
+
+                <div class="header-actions">
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <span class="greeting">Hello, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</span>
+                        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == '1'): ?>
+                            <a href="../admin/category.php" class="action-btn btn-register">Category</a>
+                            <a href="../admin/brand.php" class="action-btn btn-register">Brand</a>
+                            <a href="../admin/product.php" class="action-btn btn-register">Add Product</a>
+                        <?php endif; ?>
+                        <a href="logout.php" class="action-btn btn-login">Logout</a>
+                    <?php else: ?>
+                        <a href="register.php" class="action-btn btn-register">Register</a>
+                        <a href="login.php" class="action-btn btn-login">👤 Login</a>
                     <?php endif; ?>
-                    <a class="btn btn-logout" href="logout.php">Logout</a>
-                <?php else: ?>
-                    <a class="btn" href="register.php">Register</a>
-                    <a class="btn btn-secondary" href="login.php">Login</a>
-                <?php endif; ?>
-            </nav>
+                    <a href="cart.php" class="cart-btn">
+                        🛒
+                        <span class="cart-count"><?php echo count($cart_items); ?></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: NAVIGATION BAR -->
+        <div class="nav-bar">
+            <div class="nav-content">
+                <nav class="nav-main">
+                    <a href="all_product.php" class="nav-link">Shop</a>
+                    <a href="all_product.php" class="nav-link">Collections</a>
+                    <a href="../index.php#about" class="nav-link">About</a>
+                    <a href="../index.php#contact" class="nav-link">Contact</a>
+                </nav>
+
+                <div class="nav-secondary">
+                    <a href="all_product.php" class="secondary-link">All Products</a>
+                    <a href="../index.php#features" class="secondary-link">Features</a>
+                    <a href="checkout.php" class="secondary-link">🔒 Checkout</a>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -55,16 +155,22 @@ $requires_login = empty($customer_id);
             <div id="checkoutFeedback" class="feedback-banner" role="alert" hidden></div>
 
             <?php if ($requires_login): ?>
-                <div class="empty-state">
-                    <i class="fas fa-user-lock"></i>
-                    <h2>Sign in to continue</h2>
-                    <p>Please log in or create an account to place your order.</p>
-                    <a href="login.php" class="btn btn-primary btn-large">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </a>
-                    <a href="register.php" class="btn btn-text">
-                        <i class="fas fa-user-plus"></i> Create Account
-                    </a>
+                <div class="checkout-login-prompt">
+                    <div class="checkout-lock-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h2 class="checkout-prompt-title">Sign in to continue</h2>
+                    <p class="checkout-prompt-text">Please log in or create an account to place your order.</p>
+                    <div class="checkout-action-buttons">
+                        <a href="login.php" class="checkout-btn checkout-btn-primary">
+                            <span>LOGIN</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="register.php" class="checkout-btn checkout-btn-primary">
+                            <span>CREATE ACCOUNT</span>
+                            <i class="fas fa-user-plus"></i>
+                        </a>
+                    </div>
                 </div>
             <?php elseif (empty($cart_items)): ?>
                 <div class="empty-state">
@@ -86,44 +192,52 @@ $requires_login = empty($customer_id);
                                 <div class="summary-item" data-product-id="<?php echo $item['product_id']; ?>">
                                     <div class="summary-item-info">
                                         <h3><?php echo htmlspecialchars($item['product_title']); ?></h3>
-                                        <p>Qty: <?php echo (int)$item['qty']; ?> &bullet; $<?php echo number_format($item['product_price'], 2); ?></p>
+                                        <p>Qty: <?php echo (int)$item['qty']; ?> &bullet; GHS <?php echo number_format($item['product_price'], 2); ?></p>
                                     </div>
-                                    <strong>$<?php echo number_format($itemSubtotal, 2); ?></strong>
+                                    <strong>GHS <?php echo number_format($itemSubtotal, 2); ?></strong>
                                 </div>
                             <?php endforeach; ?>
                         </div>
 
                         <div class="summary-totals">
                             <div class="summary-line">
-                                <span>Items</span>
-                                <strong id="checkoutItemCount"><?php echo (int)$totals['count']; ?></strong>
+                                <span>Subtotal (<?php echo (int)$totals['count']; ?> item<?php echo (int)$totals['count'] != 1 ? 's' : ''; ?>)</span>
+                                <strong id="checkoutSubtotal">GHS <?php echo number_format($totals['subtotal'], 2); ?></strong>
                             </div>
                             <div class="summary-line">
-                                <span>Subtotal</span>
-                                <strong id="checkoutSubtotal">$<?php echo number_format($totals['subtotal'], 2); ?></strong>
+                                <span>Shipping</span>
+                                <strong>GHS 20.00</strong>
+                            </div>
+                            <div class="summary-line">
+                                <span>Tax</span>
+                                <strong>GHS <?php echo number_format($totals['subtotal'] * 0.1, 2); ?></strong>
+                            </div>
+                            <hr class="summary-divider">
+                            <div class="summary-line summary-total">
+                                <strong>Total</strong>
+                                <strong id="checkoutTotal">GHS <?php echo number_format($totals['subtotal'] + 20 + ($totals['subtotal'] * 0.1), 2); ?></strong>
                             </div>
                         </div>
+                        <p class="summary-note">Shipping and taxes calculated at checkout</p>
                     </section>
 
                     <section class="checkout-actions">
                         <div class="payment-card">
-                            <h2><i class="fas fa-shield-check"></i> Simulated Payment</h2>
-                            <p>Click the button below to open the payment modal. Confirming will process the order and clear your cart.</p>
+                            <h2><i class="fas fa-shield-check"></i> Secure Payment</h2>
+                            <p>Click the button below to proceed to Paystack secure payment gateway. Your payment will be processed securely.</p>
 
-                            <div class="payment-method">
-                                <label for="checkoutCurrency"><i class="fas fa-globe"></i> Currency</label>
-                                <select id="checkoutCurrency" class="styled-select">
-                                    <option value="USD" selected>USD - United States Dollar</option>
-                                    <option value="EUR">EUR - Euro</option>
-                                    <option value="GBP">GBP - British Pound</option>
-                                </select>
-                            </div>
+            <div class="payment-method">
+                <label for="checkoutCurrency"><i class="fas fa-globe"></i> Currency</label>
+                <select id="checkoutCurrency" class="styled-select" disabled>
+                    <option value="GHS" selected>GHS - Ghana Cedi</option>
+                </select>
+            </div>
 
-                            <button class="btn btn-primary btn-large" id="simulatePaymentBtn" data-total-amount="<?php echo $totals['subtotal']; ?>"<?php echo ($totals['subtotal'] <= 0) ? ' disabled' : ''; ?>>
-                                <i class="fas fa-money-check-alt"></i> Simulate Payment
-                            </button>
-                            <a href="cart.php" class="btn btn-text">
-                                <i class="fas fa-arrow-left"></i> Back to Cart
+            <button class="btn btn-primary btn-large" id="simulatePaymentBtn" data-total-amount="<?php echo $totals['subtotal'] + 20 + ($totals['subtotal'] * 0.1); ?>"<?php echo ($totals['subtotal'] <= 0) ? ' disabled' : ''; ?>>
+                <i class="fas fa-lock"></i> PROCEED TO PAYMENT
+            </button>
+                            <a href="cart.php" class="btn btn-secondary btn-large">
+                                <i class="fas fa-arrow-left"></i> BACK TO CART
                             </a>
                         </div>
                     </section>
@@ -134,7 +248,7 @@ $requires_login = empty($customer_id);
 
     <footer class="site-footer">
         <div class="container">
-            <small>© <?php echo date('Y'); ?> E‑Commerce Platform. All rights reserved.</small>
+            <p>© <?php echo date('Y'); ?> Lumé Activewear. Crafted in Ghana with care.</p>
         </div>
     </footer>
 
@@ -146,18 +260,18 @@ $requires_login = empty($customer_id);
                 <i class="fas fa-times"></i>
             </button>
             <div class="modal-header">
-                <h2 id="paymentModalTitle"><i class="fas fa-wallet"></i> Confirm Simulated Payment</h2>
+                <h2 id="paymentModalTitle"><i class="fas fa-lock"></i> Secure Payment via Paystack</h2>
             </div>
             <div class="modal-body">
-                <p>Please confirm that you have completed the simulated payment of <strong id="modalAmount"></strong>.</p>
-                <p>This will create an order, record payment details, and empty your cart.</p>
+                <p>You will be redirected to Paystack's secure payment gateway to complete your payment of <strong id="modalAmount"></strong>.</p>
+                <p>Your payment is processed securely by Paystack. After payment, you'll be redirected back to confirm your order.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" type="button" id="cancelPaymentBtn">
                     <i class="fas fa-times-circle"></i> Cancel
                 </button>
                 <button class="btn btn-primary" type="button" id="confirmPaymentBtn">
-                    <i class="fas fa-check-circle"></i> Yes, I've Paid
+                    <i class="fas fa-lock"></i> Pay Now
                 </button>
             </div>
         </div>
@@ -179,4 +293,3 @@ $requires_login = empty($customer_id);
     </template>
 </body>
 </html>
-

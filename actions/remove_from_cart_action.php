@@ -2,46 +2,57 @@
 session_start();
 header('Content-Type: application/json');
 
-require_once dirname(__FILE__) . '/../controllers/cart_controller.php';
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Set to 0 in production
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
+// Get JSON input
+$input = file_get_contents('php://input');
+$data = json_decode($input, true);
+
+// Validate input
+if (!$data || !isset($data['cartKey'])) {
     echo json_encode([
-        'status' => 'error',
-        'message' => 'Invalid request method',
+        'success' => false,
+        'error' => 'Invalid data. Cart key is required.'
     ]);
     exit;
 }
 
-$product_id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+$cartKey = htmlspecialchars($data['cartKey']);
 
-if ($product_id <= 0) {
-    http_response_code(400);
+// Check if cart exists
+if (!isset($_SESSION['cart'])) {
     echo json_encode([
-        'status' => 'error',
-        'message' => 'Invalid cart item.',
+        'success' => false,
+        'error' => 'Cart is empty.'
     ]);
     exit;
 }
 
-[$customer_id, $ip_address] = cart_context();
-
-try {
-    $removed = remove_from_cart_ctr($product_id, $customer_id, $ip_address);
-    $summary = get_user_cart_summary_ctr($customer_id, $ip_address);
-
+// Check if item exists in cart
+if (!isset($_SESSION['cart'][$cartKey])) {
     echo json_encode([
-        'status' => $removed ? 'success' : 'warning',
-        'message' => $removed ? 'Item removed from cart.' : 'Item was not found in cart.',
-        'data' => [
-            'cart' => $summary,
-        ],
+        'success' => false,
+        'error' => 'Item not found in cart.'
     ]);
-} catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Unable to remove item from cart. Please try again.',
-    ]);
+    exit;
 }
 
+// Remove item from cart
+unset($_SESSION['cart'][$cartKey]);
+
+// Calculate total items
+$totalItems = 0;
+foreach ($_SESSION['cart'] as $item) {
+    $totalItems += $item['quantity'];
+}
+
+// Return success
+echo json_encode([
+    'success' => true,
+    'message' => 'Product removed from cart successfully',
+    'cartCount' => $totalItems,
+    'cartEmpty' => empty($_SESSION['cart'])
+]);
+?>

@@ -191,10 +191,11 @@ function updateBrandDropdown(brands) {
     }
 }
 
-// Add to cart functionality (placeholder)
+// Add to cart functionality (deprecated - now handled by size modal)
 function addToCart(productId) {
-    // This will be implemented when cart functionality is added
-    alert('Add to Cart functionality will be implemented soon! Product ID: ' + productId);
+    // This function is deprecated - Quick Add now uses openSizeModal() directly
+    // Keeping for backwards compatibility but should not be called
+    console.log('addToCart() is deprecated. Use openSizeModal() instead. Product ID:', productId);
 }
 
 // Export functions for use in other scripts

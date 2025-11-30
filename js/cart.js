@@ -71,7 +71,7 @@ const CartActions = (() => {
 
     if (subtotalEl) {
       const value = Number(cart.totals.subtotal || 0).toFixed(2);
-      subtotalEl.textContent = `$${value}`;
+      subtotalEl.textContent = `GHS ${value}`;
     }
 
     const simulator = document.getElementById('simulatePaymentBtn');
@@ -116,7 +116,7 @@ const CartActions = (() => {
           const subtotalEl = itemEl.querySelector('.subtotal-value');
           if (subtotalEl) {
             subtotalEl.dataset.subtotal = subtotal.toFixed(2);
-            subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+            subtotalEl.textContent = `GHS ${subtotal.toFixed(2)}`;
           }
         });
 

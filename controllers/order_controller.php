@@ -1,7 +1,7 @@
 <?php
 require_once dirname(__FILE__) . '/../classes/order_class.php';
 
-function create_order_ctr(int $customer_id, string $invoice_no, string $status = 'processing'): int
+function create_order_ctr(int $customer_id, int $invoice_no, string $status = 'processing'): int
 {
     $order = new Order();
     return $order->create_order($customer_id, $invoice_no, $status);
@@ -13,10 +13,10 @@ function add_order_details_ctr(int $order_id, int $product_id, int $qty, float $
     return $order->add_order_detail($order_id, $product_id, $qty, $unit_price);
 }
 
-function record_payment_ctr(float $amount, int $customer_id, int $order_id, string $currency = 'USD'): bool
+function record_payment_ctr(float $amount, int $customer_id, int $order_id, string $currency = 'GHS', string $payment_method = 'direct', ?string $transaction_ref = null, ?string $authorization_code = null, ?string $payment_channel = null): bool
 {
     $order = new Order();
-    return $order->record_payment($amount, $customer_id, $order_id, $currency);
+    return $order->record_payment($amount, $customer_id, $order_id, $currency, $payment_method, $transaction_ref, $authorization_code, $payment_channel);
 }
 
 function get_customer_orders_ctr(int $customer_id): array

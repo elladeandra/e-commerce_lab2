@@ -1,91 +1,203 @@
 <?php
+/**
+ * Process Checkout Action
+ * 
+ * CORRECT LOGIC:
+ * Step 1: Read all cart items for the current user
+ * Step 2: Insert a new order into the orders table
+ * Step 3: Retrieve the new order_id
+ * Step 4: Insert one row per cart item into orderdetails
+ * Step 5: Clear the cart for that customer
+ * Step 6: Redirect to order summary page
+ */
+
 session_start();
-header('Content-Type: application/json');
-
-require_once dirname(__FILE__) . '/../classes/cart_class.php';
-require_once dirname(__FILE__) . '/../classes/order_class.php';
+require_once dirname(__FILE__) . '/../settings/core.php';
 require_once dirname(__FILE__) . '/../controllers/cart_controller.php';
+require_once dirname(__FILE__) . '/../controllers/order_controller.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Invalid request method.',
-    ]);
-    exit;
+// Check if user is logged in
+if (!isLoggedIn()) {
+    header('Location: ../view/login.php?redirect=checkout');
+    exit();
 }
 
-[$customer_id, $ip_address] = cart_context();
+$customer_id = getLoggedInUserId();
 
-if (empty($customer_id)) {
-    http_response_code(401);
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Please log in to complete checkout.',
-    ]);
-    exit;
+error_log("=== PROCESS CHECKOUT START ===");
+error_log("Customer ID: $customer_id");
+
+// ============================================================
+// STEP 1: READ ALL CART ITEMS FOR THE CURRENT USER
+// ============================================================
+
+// Initialize session cart if it doesn't exist
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
 }
 
-$cart = new Cart();
+// Read cart items from session (primary source)
+$cart_items_to_order = [];
+
+if (!empty($_SESSION['cart'])) {
+    // Use session cart
+    foreach ($_SESSION['cart'] as $cartKey => $item) {
+        $cart_items_to_order[] = [
+            'product_id' => $item['product_id'],
+            'qty' => $item['quantity'] ?? 1,
+            'product_price' => $item['product_price'] ?? 0,
+            'product_name' => $item['product_name'] ?? '',
+            'size' => $item['size'] ?? null
+        ];
+    }
+    error_log("Read " . count($cart_items_to_order) . " items from session cart");
+} else {
+    // Fallback to database cart
+    [$customer_id_db, $ip_address] = cart_context();
+    $cart_summary = get_user_cart_summary_ctr($customer_id_db, $ip_address);
+    $db_cart_items = $cart_summary['items'] ?? [];
+    
+    foreach ($db_cart_items as $item) {
+        $cart_items_to_order[] = [
+            'product_id' => $item['product_id'] ?? $item['p_id'] ?? null,
+            'qty' => $item['qty'] ?? 1,
+            'product_price' => $item['product_price'] ?? 0,
+            'product_name' => $item['product_title'] ?? '',
+            'size' => $item['size'] ?? null
+        ];
+    }
+    error_log("Read " . count($cart_items_to_order) . " items from database cart");
+}
+
+// Validate cart is not empty
+if (empty($cart_items_to_order)) {
+    error_log("ERROR: Cart is empty");
+    header('Location: ../view/checkout.php?error=empty_cart');
+    exit();
+}
+
+error_log("Cart items to order: " . json_encode($cart_items_to_order));
+
+// ============================================================
+// STEP 2: INSERT A NEW ORDER INTO THE ORDERS TABLE
+// ============================================================
+
 $order = new Order();
+$order->beginTransaction();
 
 try {
-    $summary = $cart->get_cart_summary($customer_id, $ip_address);
-    $items = $summary['items'];
-
-    if (empty($items)) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Your cart is empty. Add items before checking out.',
-        ]);
-        exit;
+    // Generate invoice number as integer (database expects int)
+    // Format: YYMMDD + 3-digit random (e.g., 250101123 = 250,101,123)
+    $date_part = date('ymd'); // YYMMDD format (e.g., 250101)
+    $random_part = rand(100, 999); // 3-digit random (100-999)
+    $invoice_no = intval($date_part . $random_part); // e.g., 250101123
+    $order_date = date('Y-m-d');
+    $order_status = 'Paid';
+    
+    error_log("Attempting to create order - Customer ID: $customer_id, Invoice: $invoice_no");
+    
+    // Insert order into orders table
+    $order_id = create_order_ctr($customer_id, $invoice_no, $order_status);
+    
+    if (!$order_id || $order_id <= 0) {
+        error_log("ERROR: Order creation failed - order_id is 0 or negative");
+        throw new Exception("Failed to create order in database. Order ID returned: $order_id");
     }
-
-    $order->beginTransaction();
-
-    $invoice_no = random_int(100000000, 999999999);
-    $order_reference = 'ORD-' . $invoice_no . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
-
-    $order_id = $order->create_order($customer_id, (string)$invoice_no, 'processing');
-
-    foreach ($items as $item) {
-        $order->add_order_detail(
-            $order_id,
-            (int)$item['product_id'],
-            (int)$item['qty'],
-            (float)$item['product_price']
-        );
+    
+    error_log("Order created successfully - ID: $order_id, Invoice: $invoice_no");
+    
+    // ============================================================
+    // STEP 3: RETRIEVE THE NEW ORDER_ID (already have it from create_order_ctr)
+    // ============================================================
+    
+    // $order_id is already available from Step 2
+    
+    // ============================================================
+    // STEP 4: INSERT ONE ROW PER CART ITEM INTO ORDERDETAILS
+    // ============================================================
+    
+    $order_items_created = 0;
+    foreach ($cart_items_to_order as $item) {
+        $product_id = $item['product_id'] ?? null;
+        $qty = intval($item['qty'] ?? 1);
+        $unit_price = floatval($item['product_price'] ?? 0);
+        
+        if (!$product_id || $product_id <= 0) {
+            error_log("Skipping invalid product_id in cart item");
+            continue;
+        }
+        
+        // Insert order detail
+        $detail_result = add_order_details_ctr($order_id, $product_id, $qty, $unit_price);
+        
+        if (!$detail_result) {
+            error_log("ERROR: Failed to add order detail for product ID: $product_id");
+            throw new Exception("Failed to add order detail for product ID: $product_id");
+        }
+        
+        $order_items_created++;
+        error_log("Order detail created - Product: $product_id, Qty: $qty, Price: $unit_price");
     }
-
-    $total_amount = (float)$summary['totals']['subtotal'];
-    $currency = $_POST['currency'] ?? 'USD';
-
-    $order->record_payment($total_amount, $customer_id, $order_id, $currency);
-
+    
+    if ($order_items_created === 0) {
+        error_log("ERROR: No order items were created");
+        throw new Exception("No order items were created. Order cannot be empty.");
+    }
+    
+    error_log("Created $order_items_created order items for order $order_id");
+    
+    // ============================================================
+    // STEP 5: CLEAR THE CART FOR THAT CUSTOMER
+    // ============================================================
+    
+    // Clear session cart
+    if (isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = [];
+        error_log("Session cart cleared");
+    }
+    
+    // Clear database cart
+    [$customer_id_db, $ip_address] = cart_context();
+    $cart_emptied = empty_cart_ctr($customer_id_db, $ip_address);
+    
+    if (!$cart_emptied) {
+        error_log("Warning: Database cart may not have been fully cleared");
+    } else {
+        error_log("Database cart cleared for customer: $customer_id_db");
+    }
+    
+    // Verify cart is empty
+    $remaining_cart = get_user_cart_summary_ctr($customer_id_db, $ip_address);
+    if (!empty($remaining_cart['items'])) {
+        error_log("WARNING: Cart still contains items after clearing: " . count($remaining_cart['items']));
+        // Force delete all remaining items
+        foreach ($remaining_cart['items'] as $remaining_item) {
+            $product_id = $remaining_item['product_id'] ?? $remaining_item['p_id'] ?? null;
+            if ($product_id) {
+                remove_from_cart_ctr($product_id, $customer_id_db, $ip_address);
+            }
+        }
+        error_log("Force-cleared remaining cart items");
+    }
+    
+    // Commit database transaction
     $order->commit();
-
-    $cart->empty_cart($customer_id, $ip_address);
-    $empty_summary = $cart->get_cart_summary($customer_id, $ip_address);
-
-    echo json_encode([
-        'status' => 'success',
-        'message' => 'Payment confirmed and order created successfully.',
-        'data' => [
-            'order_id' => $order_id,
-            'invoice_no' => (string)$invoice_no,
-            'order_reference' => $order_reference,
-            'total_amount' => $total_amount,
-            'currency' => $currency,
-            'cart' => $empty_summary,
-        ],
-    ]);
-} catch (Throwable $e) {
+    error_log("Database transaction committed successfully");
+    
+    // ============================================================
+    // STEP 6: REDIRECT TO ORDER SUMMARY PAGE
+    // ============================================================
+    
+    error_log("Redirecting to order summary - Order ID: $order_id");
+    header("Location: ../view/order_summary.php?order_id=$order_id");
+    exit();
+    
+} catch (Exception $e) {
+    // Rollback database transaction on error
     $order->rollBack();
-    http_response_code(500);
-
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Checkout failed. Please try again.',
-    ]);
+    error_log("ERROR: Database transaction rolled back: " . $e->getMessage());
+    
+    // Redirect back to checkout with error
+    header('Location: ../view/checkout.php?error=' . urlencode($e->getMessage()));
+    exit();
 }
-

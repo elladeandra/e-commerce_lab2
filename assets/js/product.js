@@ -241,39 +241,79 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        productsList.innerHTML = products.map(product => `
-            <div class="product-card">
-                ${product.product_image ? `
-                    <div class="product-image">
-                        <img src="/~emmanuella.oteng/${product.product_image}" alt="${escapeHtml(product.product_title)}">
-                    </div>
-                ` : `
-                    <div class="product-image">
-                        <div class="no-image">
-                            <i class="fas fa-image"></i>
+        productsList.innerHTML = products.map(product => {
+            // Escape all user input to prevent XSS
+            const title = escapeHtml(product.product_title);
+            const price = parseFloat(product.product_price).toFixed(2);
+            const category = escapeHtml(product.cat_name || 'N/A');
+            const brand = escapeHtml(product.brand_name || 'N/A');
+            const desc = escapeHtml(product.product_desc || '');
+            const keywords = escapeHtml(product.product_keywords || '');
+            // Fix image path - remove leading slash if present
+            let imagePath = '';
+            if (product.product_image) {
+                imagePath = product.product_image.startsWith('/') 
+                    ? product.product_image.substring(1) 
+                    : `../${product.product_image}`;
+            }
+            
+            // Escape for onclick attributes
+            const titleEscaped = product.product_title.replace(/'/g, "\\'");
+            const descEscaped = (product.product_desc || '').replace(/'/g, "\\'");
+            const keywordsEscaped = (product.product_keywords || '').replace(/'/g, "\\'");
+            
+            return `
+            <div class="admin-product-card">
+                <div class="admin-product-image-wrapper">
+                    ${product.product_image ? `
+                        <img src="${imagePath}" alt="${title}" class="admin-product-image">
+                    ` : `
+                        <div class="no-image" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; background: linear-gradient(135deg, #FFE5EC, #E5DEFF);">
+                            <i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
                             <p>No Image</p>
                         </div>
-                    </div>
-                `}
-                <div class="product-info">
-                    <h3>${escapeHtml(product.product_title)}</h3>
-                    <p><i class="fas fa-dollar-sign"></i> Price: $${parseFloat(product.product_price).toFixed(2)}</p>
-                    <p><i class="fas fa-tag"></i> Category: ${escapeHtml(product.cat_name || 'N/A')}</p>
-                    <p><i class="fas fa-trademark"></i> Brand: ${escapeHtml(product.brand_name || 'N/A')}</p>
-                    <p><i class="fas fa-hashtag"></i> ID: ${product.product_id}</p>
-                    <p class="product-description">${escapeHtml(product.product_desc)}</p>
-                    <p><i class="fas fa-key"></i> Keywords: ${escapeHtml(product.product_keywords)}</p>
+                    `}
                 </div>
-                <div class="product-actions">
-                    <button onclick="editProduct(${product.product_id}, '${escapeHtml(product.product_title)}', '${product.product_price}', '${escapeHtml(product.product_desc)}', '${escapeHtml(product.product_keywords)}', '${product.product_cat}', '${product.product_brand}')" class="btn btn-edit">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button onclick="deleteProduct(${product.product_id}, '${escapeHtml(product.product_title)}')" class="btn btn-delete">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
+                
+                <div class="admin-product-info">
+                    <h3 class="admin-product-name">${title}</h3>
+                    
+                    <p class="admin-product-price">$ Price: $${price}</p>
+                    
+                    <p class="admin-product-details">
+                        <strong>🏷️ Category:</strong> ${category}
+                    </p>
+                    
+                    <p class="admin-product-details">
+                        <strong>TM Brand:</strong> ${brand}
+                    </p>
+                    
+                    <p class="admin-product-details">
+                        <strong># ID:</strong> ${product.product_id}
+                    </p>
+                    
+                    ${desc ? `
+                    <p class="admin-product-description">${desc}</p>
+                    ` : ''}
+                    
+                    ${keywords ? `
+                    <p class="admin-product-keywords">
+                        🔍 Keywords: ${keywords}
+                    </p>
+                    ` : ''}
+                    
+                    <div class="admin-product-actions">
+                        <button onclick="editProduct(${product.product_id}, '${titleEscaped}', '${product.product_price}', '${descEscaped}', '${keywordsEscaped}', '${product.product_cat}', '${product.product_brand}')" class="admin-btn admin-btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button onclick="deleteProduct(${product.product_id}, '${titleEscaped}')" class="admin-btn admin-btn-delete">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // Edit product function
